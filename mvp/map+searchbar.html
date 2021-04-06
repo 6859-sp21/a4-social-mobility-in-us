@@ -3,10 +3,12 @@
     <!-- Load d3.js -->
     <script src="https://d3js.org/d3.v6.js"></script>
     <script src="https://unpkg.com/topojson-client@3"></script>
+    <!-- <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script> -->
 
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="http://rawgithub.com/Caged/d3-tip/master/examples/example-styles.css">
   </head>
   <body>
     <h1>6.859: Search Box Demo</h1>
@@ -62,6 +64,12 @@
         // 2. Setting up variables that describe our map's space.
         const width = 975;
         const height = 610;
+
+        var tip_div = d3.select("body")
+                  		    .append("div")
+                      		.attr("class", "d3-tip")
+                      		.style("opacity", 0)
+                          .style("position", "absolute");
 
         const zoom = d3.zoom()
             .scaleExtent([1, 8])
@@ -279,6 +287,7 @@
             //       .attr('fill-opacity', 0.7)
             //       .attr('d', d => symbol())
 
+
             g.selectAll("circle")
                 .data(data)
                 .join(
@@ -287,24 +296,54 @@
                     .attr("r", 3)
                     .attr("fill", d => colorScale(d.tier_name))
                     .attr("stroke", d => colorScale(d.tier_name))
-                    // .attr("fill-opacity", 1)
-                    .attr("stroke-opacity", 0),
-                    // .transition()
-                    // .attr("fill-opacity", 0)
-                    // .attr("stroke-opacity", 1));
+                    .attr("fill-opacity", 1)
+                    .attr("stroke-opacity", 0)
+                    .raise()
+                    .on("mouseover", function(e, d) {
+                      	tip_div.transition()
+                    	   .duration(200)
+                         .style("opacity", .8);
+                       tip_div.text(d.name)
+                         .style("left", (e.pageX) + "px")
+                         .style("top", (e.pageY - 28) + "px");
+                  	})
+                    .on("mouseout", function(e, d) {
+                        tip_div.transition()
+                           .duration(500)
+                           .style("opacity", 0);
+                    }),
+
                   update => update
+                    .attr("transform", d => `translate(${d.projection})`)
                     .attr("r", 3)
                     .attr("fill", d => colorScale(d.tier_name))
                     .attr("stroke", d => colorScale(d.tier_name))
+                    .attr("stroke-opacity", 0)
                     .attr("fill-opacity", 1)
-                    .attr("stroke-opacity", 0),
+                    .on("mouseover", function(e, d) {
+                        tip_div.transition()
+                         .duration(200)
+                         .style("opacity", .8);
+                       tip_div.text(d.name)
+                         .style("left", (e.pageX) + "px")
+                         .style("top", (e.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function(e, d) {
+                        tip_div.transition()
+                           .duration(500)
+                           .style("opacity", 0);
+                    }),
 
                   exit => exit
                     .attr("fill", "gray")
                     .attr("stroke", "gray")
                     .attr("fill-opacity", 0)
                     .attr("stroke-opacity", .5)
-                    .attr("r", 2));
+                    .attr("r", 1)
+                    .on("mouseover", null)
+                    .on("mouseout", null))
+
+                  .order();
 
           }
 
