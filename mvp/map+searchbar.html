@@ -11,9 +11,10 @@
   <body>
     <h1>6.859: Search Box Demo</h1>
 
-    <input type="text" value="" id="search_box"/>
+    <p>Search for schools using the searchbox. Clicking on the white background of the map will reset your search.
+    <input type="text" value="" id="search_box" placeholder="Search for schools..."/>
 
-    <div id="chart" style="width:975px;height:610px;">
+    <div id="chart" style="width:975px;height:610px;border:1px solid black;">
       <!-- This is where we will put our chart. -->
     </div>
     <style>
@@ -33,7 +34,7 @@
         var us; // = await d3.json("https://static.observableusercontent.com/files/75faaaca1f1a4f415145b9db520349a3a0b93a53c1071346a30e6824586a7c251f45367d9262ed148b7a2b5c2694aa7703f3ac88051abc65066fd0074fdf9c9e?response-content-disposition=attachment%3Bfilename*%3DUTF-8%27%27states-albers-10m.json")
         $.ajax({
           dataType: "json",
-          url: "https://static.observableusercontent.com/files/75faaaca1f1a4f415145b9db520349a3a0b93a53c1071346a30e6824586a7c251f45367d9262ed148b7a2b5c2694aa7703f3ac88051abc65066fd0074fdf9c9e?response-content-disposition=attachment%3Bfilename*%3DUTF-8%27%27states-albers-10m.json",
+          url: "https://raw.githubusercontent.com/6859-sp21/a4-social-mobility-in-us/main/states-albers-10m.json",
           // data: data,
           success: (data, success) => {if (success) us = data;
                                        else console.log("FAILED TO LOAD US MAP")},
@@ -112,13 +113,20 @@
             d3.zoomIdentity,
             d3.zoomTransform(svg.node()).invert([width / 2, height / 2])
           );
+
+          $('#search_box').val("")
+          chartsDataJoin(college_mobility);
+
+
+
+
         }
 
         function clicked(event, d) {
           const [[x0, y0], [x1, y1]] = path.bounds(d);
           event.stopPropagation();
           states.transition().style("fill", null);
-          d3.select(this).transition().style("fill", "red");
+          d3.select(this).transition().style("fill", "black");
           svg.transition().duration(750).call(
             zoom.transform,
             d3.zoomIdentity
@@ -278,13 +286,25 @@
                     .attr("transform", d => `translate(${d.projection})`)
                     .attr("r", 3)
                     .attr("fill", d => colorScale(d.tier_name))
+                    .attr("stroke", d => colorScale(d.tier_name))
                     // .attr("fill-opacity", 1)
                     .attr("stroke-opacity", 0),
                     // .transition()
                     // .attr("fill-opacity", 0)
                     // .attr("stroke-opacity", 1));
-                  update => update, // TODO
-                  exit => exit.remove());
+                  update => update
+                    .attr("r", 3)
+                    .attr("fill", d => colorScale(d.tier_name))
+                    .attr("stroke", d => colorScale(d.tier_name))
+                    .attr("fill-opacity", 1)
+                    .attr("stroke-opacity", 0),
+
+                  exit => exit
+                    .attr("fill", "gray")
+                    .attr("stroke", "gray")
+                    .attr("fill-opacity", 0)
+                    .attr("stroke-opacity", .5)
+                    .attr("r", 2));
 
           }
 
