@@ -4,11 +4,16 @@
     <script src="https://d3js.org/d3.v6.js"></script>
     <script src="https://unpkg.com/topojson-client@3"></script>
     <!-- <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script> -->
+    <!-- <script src="https://cdnjs.com/libraries/d3-legend"></script> -->
+    <!-- <script src="https://api.observablehq.com/@d3/color-legend.js?v=3"></script> -->
+
+
 
     <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="https://rawgithub.com/Caged/d3-tip/master/examples/example-styles.css">
+    <!-- <link rel="stylesheet" href="style.css"> -->
   </head>
   <body>
     <h1>6.859: Social Mobility in the US College System</h1>
@@ -213,9 +218,15 @@
         //   .range([height - margin.bottom, margin.top])
         //   .nice();
         //
-        const colorScale = d3.scaleOrdinal()
+        const colorScaleTier = d3.scaleOrdinal()
           .domain(college_mobility.map(d => d.tier_name))
           .range(d3.schemeTableau10); // try other schemes, too!
+
+        const colorScaleMobilityGradient = d3.scaleLinear()
+            .domain([d3.min(college_mobility, d => d.kq5_cond_parq1),
+                     d3.mean(college_mobility, d => d.kq5_cond_parq1),
+                     d3.max(college_mobility, d => d.kq5_cond_parq1)])
+            .range(['red', '#ddd', 'blue']);
         //
         //
         // // 5. Drawing our points
@@ -237,87 +248,170 @@
               height_histo = 150,
               margin_histo = {top: 10, right: 0, bottom: 20, left: 250};
 
-        const svg_histo = d3.create('svg')
+        const svg_histo_tier = d3.create('svg')
           .attr('width', width_histo)
           .attr('height', height_histo);
 
         // Helper function to nicely aggregate the data to plot on the histogram
         // output: [{key: 0, value: 495927174}, {key: 1, value: 355392405}, ...{key: 5, value: 854125031}]
-        const aggregate_Histo = (data) => d3.rollups(
-          data.filter(d => (d.count > 200
-                            // && (!d.hasOwnProperty('selected') || d.selected == true)
-                           )),
-
+        const aggregate_histo_tier = (data) => d3.rollups(
+          data,
           vals => vals.length,
           d => d.tier_name
         ).map(d => ({key: d[0], value: d[1]}));
 
+        const rawAggregateTier = aggregate_histo_tier(college_mobility);
 
-        const rawAggregate = aggregate_Histo(college_mobility);
-
-        console.log(rawAggregate)
-
-        const xScale_Histo = d3.scaleLinear()
-          .domain([0, d3.max(rawAggregate, d => d.value)])
+        const xScale_histo_tier = d3.scaleLinear()
+          .domain([0, d3.max(rawAggregateTier, d => d.value)])
           .range([margin_histo.left, width_histo - margin_histo.right])
           .nice();
 
-        const yScale_Histo = d3.scaleBand()
-          .domain(rawAggregate.map(d => d.key))
+        const yScale_histo_tier = d3.scaleBand()
+          .domain(rawAggregateTier.map(d => d.key))
           .range([height_histo - margin_histo.bottom, margin_histo.top])
           .padding(0.1);
 
-        svg_histo.append('g')
+        svg_histo_tier.append('g')
           .classed('x-axis', true)
           .attr('transform', `translate(0, ${height_histo - margin_histo.bottom})`)
-          .call(d3.axisBottom(xScale_Histo).ticks(3));
+          .call(d3.axisBottom(xScale_histo_tier).ticks(3));
 
-        // const continents = ['South Asia',
-        //   'Europe & Central Asia',
-        //   'Sub-Saharan Africa',
-        //   'America',
-        //   'East Asia & Pacific',
-        //   'Middle East & North Africa'];
-
-        svg_histo.append('g')
+        svg_histo_tier.append('g')
           .classed('y-axis', true)
           .attr('transform', `translate(${margin_histo.left}, 0)`)
-          .call(d3.axisLeft(yScale_Histo).tickFormat((d,i) => d));
+          .call(d3.axisLeft(yScale_histo_tier).tickFormat((d,i) => d));
 
-        const g_hist = svg_histo.append('g')
+        const g_hist_tier = svg_histo_tier.append('g')
           .classed('marks', true);
 
         //histogram datajoin
-        function dataJoinHisto(rawData = college_mobility) {
-          const data = aggregate_Histo(rawData);
+        function dataJoinHistoTier(rawData = college_mobility) {
+          const data = aggregate_histo_tier(rawData);
           // console.log(data);
 
-          g_hist.selectAll('rect')
+          g_hist_tier.selectAll('rect')
             .data(data)
             .join(
               enter => enter.append("rect")
-                  .attr("fill", d => colorScale(d.key))
+                  .attr("fill", d => colorScaleTier(d.key))
                   .attr('x', margin_histo.left)
-                  .attr('y', d => yScale_Histo(d.key))
-                  .attr('height', yScale_Histo.bandwidth())
+                  .attr('y', d => yScale_histo_tier(d.key))
+                  .attr('height', yScale_histo_tier.bandwidth())
                 .call(enter => enter.transition().duration(1000)
                   .attr('width', d => {
                     console.log(d.value);
-                    return xScale_Histo(d.value) - margin_histo.left})),
+                    return xScale_histo_tier(d.value) - margin_histo.left})),
               update => update
-                  .attr("fill", d => colorScale(d.key))
-                  .attr('y', d => yScale_Histo(d.key))
-                  // .attr('width', d => xScale_Histo(d.value) - margin_histo.left),
+                  .attr("fill", d => colorScaleTier(d.key))
+                  .attr('y', d => yScale_histo_tier(d.key))
+                  // .attr('width', d => xScale_histo_tier(d.value) - margin_histo.left),
                 .call(update => update.transition().duration(200)
-                  .attr('width', d => xScale_Histo(d.value) - margin_histo.left)),
+                  .attr('width', d => xScale_histo_tier(d.value) - margin_histo.left)),
               exit => exit
                 .call(exit => exit.transition().duration(1000)
-                  .attr('width', d => xScale_Histo(0) - margin_histo.left)
+                  .attr('width', d => xScale_histo_tier(0) - margin_histo.left)
                   .remove())
             );
 
         }
+
+        //-------------------------------------------------------------------------
+
+
+      //   const width_histo = 600,
+      //         height_histo = 150,
+      //         margin_histo = {top: 10, right: 0, bottom: 20, left: 250};
+      //
+      //   const svg_histo_mobility = d3.create('svg')
+      //     .attr('width', width_histo)
+      //     .attr('height', height_histo);
+      //
+      //   // Helper function to nicely aggregate the data to plot on the histogram
+      //   // output: [{key: 0, value: 495927174}, {key: 1, value: 355392405}, ...{key: 5, value: 854125031}]
+      //   const aggregate_histo_mobility = (data) => {
+      //
+      //     {"Tier Avg": }
+      //     d3.rollups(
+      //     vals => vals,
+      //     d => d.name
+      //   ).map(d => ({key: d[0], value: d[1]}))
+      // };
+      //
+      //   // const rawAggregateTier = aggregate_histo_tier(college_mobility);
+      //
+      //   const yScale_histo_mobility = d3.scaleLinear()
+      //     .domain([0, 100])
+      //     .range([margin_histo.left, width_histo - margin_histo.right])
+      //     .nice();
+      //
+      //   const xScale_histo_mobility = d3.scaleBand()
+      //     .domain(["Tier Avg", "State Avg", "US Avg"])
+      //     .range([height_histo - margin_histo.bottom, margin_histo.top])
+      //     .padding(0.1);
+      //
+      //   svg_histo_mobility.append('g')
+      //     .classed('x-axis', true)
+      //     .attr('transform', `translate(0, ${height_histo - margin_histo.bottom})`)
+      //     .call(d3.axisBottom(xScale_histo_mobility).ticks(3));
+      //
+      //   svg_histo_mobility.append('g')
+      //     .classed('y-axis', true)
+      //     .attr('transform', `translate(${margin_histo.left}, 0)`)
+      //     .call(d3.axisLeft(yScale_histo_mobility).tickFormat((d,i) => d));
+      //
+      //   const g_hist = svg_histo_mobility.append('g')
+      //     .classed('marks', true);
+      //
+      //   //histogram datajoin
+      //   function dataJoinHistoMobility(rawData = college_mobility) {
+      //
+      //     g_hist.selectAll('rect')
+      //       .data(data)
+      //       .join(
+      //         enter => enter.append("rect")
+      //             .attr("fill", "black")
+      //             .attr('x', d => xScale_histo_mobility(d.value) - margin_histo.left})
+      //             .attr('y', margin_histo.bottom)
+      //             .attr('height', d => yScale_histo_mobility(d.))
+      //           .call(enter => enter.transition().duration(1000)
+      //             .attr('width', d => xScale_histo_mobility.bandwidth()),
+      //         update => update
+      //             .attr("fill", d => colorScaleTier(d.key))
+      //             .attr('y', d => yScale_histo_tier(d.key))
+      //             // .attr('width', d => xScale_histo_tier(d.value) - margin_histo.left),
+      //           .call(update => update.transition().duration(200)
+      //             .attr('width', d => yScale_histo_mobility(d.value) - margin_histo.left)),
+      //         exit => exit
+      //           .call(exit => exit.transition().duration(1000)
+      //             .attr('width', d => yScale_histo_mobility(0) - margin_histo.left)
+      //             .remove())
+      //       );
+      //
+      //   }
+
+
+
+
+
+
+
+
         //*********************************************************************
+
+
+        // svg.append("g")
+        //   .attr("class", "legendLinear")
+        //   .attr("transform", "translate(20,20)");
+        //
+        // var legendLinear = d3.legendColor()
+        //   .shapeWidth(30)
+        //   .cells(10)
+        //   .orient('horizontal')
+        //   .scale(colorScaleMobilityGradient);
+        //
+        // svg.select(".legendLinear")
+        //   .call(legendLinear);
 
         //scatter plot datajoin
         function dataJoinMap(rawData = college_mobility) {
@@ -339,8 +433,8 @@
                   enter => enter.append("circle")
                     .attr("transform", d => `translate(${d.projection})`)
                     .attr("r", 3)
-                    .attr("fill", d => colorScale(d.tier_name))
-                    .attr("stroke", d => colorScale(d.tier_name))
+                    .attr("fill", d => colorScaleMobilityGradient(d.kq5_cond_parq1))
+                    .attr("stroke", d => colorScaleMobilityGradient(d.kq5_cond_parq1))
                     .attr("fill-opacity", 1)
                     .attr("stroke-opacity", 0)
                     .raise()
@@ -361,8 +455,8 @@
                   update => update
                     .attr("transform", d => `translate(${d.projection})`)
                     .attr("r", 3)
-                    .attr("fill", d => colorScale(d.tier_name))
-                    .attr("stroke", d => colorScale(d.tier_name))
+                    .attr("fill", d => colorScaleMobilityGradient(d.kq5_cond_parq1))
+                    .attr("stroke", d => colorScaleMobilityGradient(d.kq5_cond_parq1))
                     .attr("stroke-opacity", 0)
                     .attr("fill-opacity", 1)
                     .on("mouseover", function(e, d) {
@@ -388,8 +482,6 @@
                     .on("mouseover", null)
                     .on("mouseout", null))
 
-                  .order();
-
           }
 
 
@@ -398,7 +490,11 @@
           dataJoinMap(rawData);
 
           // this is for the histogram
-          dataJoinHisto(rawData);
+          dataJoinHistoTier(rawData);
+
+          // states.raise();
+          // g.selectAll("path").raise();
+
         };
 
         chartsDataJoin();
