@@ -18,8 +18,15 @@
 
     <p>Search for schools using the searchbox. Clicking on the white background of the map will reset your search.
     <input type="text" value="" id="search_box" placeholder="Search for schools..."/>
+    <button id = "search_button"type="button">Update Charts</button>
+    <button id = "reset_button"type="button">Reset Zoom</button>
 
-    <div id="chart" style="width:975px;height:610px;border:1px solid black;">
+    </p>
+
+
+
+
+    <div id="chart" style="width:975px;height:610px;border:1px solid white;">
       <!-- This is where we will put our chart. -->
     </div>
     <style>
@@ -28,9 +35,36 @@
         stroke: black;
         stroke-width: 1px;
       }
+
+     .ui-autocomplete {
+          opacity: .5;
+          max-height: 200px;
+          max-width: 500px;
+          overflow-y: auto;
+          /* prevent horizontal scrollbar */
+          overflow-x: hidden;
+          /* add padding to account for vertical scrollbar */
+          padding-right: 20px;
+      }
+
     </style>
 
     <script>
+
+    var search_box_text = "";
+    var selected_state = "";
+
+
+    function filter_searchbox(d, text = search_box_text) {
+        return d.name.toLowerCase().includes(text.toLowerCase())
+    }
+
+    function filter_state(d, state = selected_state) {
+        return selected_state == "" ? true : d.state_name == selected_state
+    }
+
+
+
       // Load data from a URL. You can also have the json file downloaded.
       // See https://github.com/d3/d3/blob/master/API.md#fetches-d3-fetch for more options.
       d3.csv("https://raw.githubusercontent.com/6859-sp21/a4-social-mobility-in-us/main/final_dataset.csv").then((college_mobility) => {
@@ -62,7 +96,7 @@
         // console.log(us)
 
         // 1. Filtering our data
-        const data = college_mobility.filter(d => d.count > 200);
+        const data = college_mobility//.filter(d => d.count > 200);
 
         // 2. Setting up variables that describe our map's space.
         const width = 975;
@@ -126,10 +160,10 @@
           );
 
           $('#search_box').val("")
+          search_box_text = ""
+          selected_state = ""
+
           chartsDataJoin(college_mobility);
-
-
-
 
         }
 
@@ -139,7 +173,9 @@
           states.transition().style("fill", null);
 
 
-          chartsDataJoin(college_mobility.filter(d => this.__data__.properties.name == d.state_name))
+          selected_state = this.__data__.properties.name
+
+          chartsDataJoin(college_mobility.filter(d => filter_searchbox(d) && filter_state(d)))
 
           d3.select(this).transition().style("fill", "black");
           svg.transition().duration(750).call(
@@ -442,19 +478,58 @@
         //   chartsDataJoin(gapminder);
         // });
 
+        // console.log(college_mobility)
+        // console.log(typecollege_mobility))
+
+
+
+        $('#search_box').autocomplete({
+          // source: college_mobility.map(d => d.name)
+          source: function (request, response) {
+                      response(college_mobility
+                        .filter(d => filter_searchbox(d) & filter_state(d))
+                        .map(d => d.name))
+                  }
+        });
+
         $('#search_box').keyup(function(){
           // $('#slider').slider({value: this.value});
 
           console.log(this.value);
-          chartsDataJoin(college_mobility.filter(d => d.name.toLowerCase().includes(this.value.toLowerCase())));
+
+          search_box_text = this.value
+
+          dataJoinMap(college_mobility.filter(d => filter_searchbox(d) && filter_state(d)));
         });
+
+        $('#search_button').click(function(){
+          // $('#slider').slider({value: this.value});
+
+          // console.log(this.value);
+
+          console.log("SEARCH CLICKED");
+
+          chartsDataJoin(college_mobility.filter(d => filter_searchbox(d) && filter_state(d)));
+        });
+
+        $('#reset_button').click(function(){
+          // $('#slider').slider({value: this.value});
+
+          // console.log(this.value);
+
+          console.log("RESET CLICKED");
+
+          reset()
+
+        });
+
 
 
 
         document.getElementById("chart").appendChild(svg.node());
 
         //add the histogram below the graph
-        document.getElementById("chart").appendChild(svg_histo.node());
+        document.getElementById("chart").appendChild(svg_histo_tier.node());
 
       });
 
