@@ -1,0 +1,67 @@
+/* body {
+  background-color: #04091E;;
+}
+
+h1 {
+  color: white;
+  text-align: center;
+}
+
+p {
+  color: white;
+  font-family: verdana;
+  font-size: 20px;
+} */
+
+.grid-container {
+  display: grid;
+  grid-template-columns: 25% 25% 25% 25%;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 0px 0px;
+  grid-template-areas:
+    "Map Map Map RaceDemographics"
+    "Map Map Map MajorDist"
+    "SocialMobility StickerPrice ParentsIncome .";
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.Map { grid-area: Map; }
+
+.RaceDemographics { grid-area: RaceDemographics; }
+
+.MajorDist { grid-area: MajorDist; }
+
+.SocialMobility { grid-area: SocialMobility; }
+
+.StickerPrice { grid-area: StickerPrice; }
+
+.ParentsIncome { grid-area: ParentsIncome; }
+
+.selected {
+  opacity: 1 !important;
+  stroke: black;
+  stroke-width: 1px;
+}
+
+.ui-autocomplete {
+    opacity: .5;
+    max-height: 200px;
+    max-width: 500px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+    /* add padding to account for vertical scrollbar */
+    padding-right: 20px;
+}
+
+html {
+  font-family: sans-serif;
+}
+
+svg {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+
+}

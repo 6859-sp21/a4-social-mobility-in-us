@@ -13,13 +13,14 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="https://rawgithub.com/Caged/d3-tip/master/examples/example-styles.css">
-    <!-- <link rel="stylesheet" href="style.css"> -->
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
+
     <h1>6.859: Social Mobility in the US College System</h1>
 
-    <!-- <div class="flourish-embed flourish-chart" data-src="visualisation/5819664" style = "width: 400px;"><script src="https://public.flourish.studio/resources/embed.js"></script></div>
-    <p> US states present different opportunities for social mobility (Figure 1). This website intends to provide you with a tool to better understand the heterogeneity in the degree of social mobility that US colleges provide and related factors. It is based on data by the Opportunity Insights project at Harvard University. The interactive tool at the bottom will allow you to explore this issue at the college level.</p> -->
+    <div class="flourish-embed flourish-chart" data-src="visualisation/5836846" style = "width: 400px;"><script src="https://public.flourish.studio/resources/embed.js"></script></div>
+    <p> US states present different opportunities for social mobility (Figure 1). This website intends to provide you with a tool to better understand the heterogeneity in the degree of social mobility that US colleges provide and related factors. It is based on data by the Opportunity Insights project at Harvard University. The interactive tool at the bottom will allow you to explore this issue at the college level.</p>
 
     <p>Search for schools using the searchbox. Clicking on the white background of the map will reset your search.
     <input type="text" value="" id="search_box" placeholder="Search for schools..."/>
@@ -28,36 +29,28 @@
 
     </p>
 
-
-
-
-    <div id="chart" style="width:975px;height:610px;border:1px solid white;">
-      <!-- This is where we will put our chart. -->
+    <div class="grid-container">
+      <div class="Map" style="border:1px solid black;"></div>
+      <!-- <div class="Map" style="width:975px;height:610px;border:1px solid black;"></div> -->
+      <div class="RaceDemographics"></div>
+      <div class="MajorDist"></div>
+      <div class="SocialMobility"></div>
+      <div class="StickerPrice"></div>
+      <div class="ParentsIncome"></div>
     </div>
-    <style>
-      .selected {
-        opacity: 1 !important;
-        stroke: black;
-        stroke-width: 1px;
-      }
 
-     .ui-autocomplete {
-          opacity: .5;
-          max-height: 200px;
-          max-width: 500px;
-          overflow-y: auto;
-          /* prevent horizontal scrollbar */
-          overflow-x: hidden;
-          /* add padding to account for vertical scrollbar */
-          padding-right: 20px;
-      }
-
-    </style>
+    <!-- <div class="Map" id="chart" style="width:975px;height:610px;border:1px solid black;"> -->
+      <!-- This is where we will put our chart. -->
+    <!-- </div> -->
 
     <script>
 
     var search_box_text = "";
     var selected_state = "";
+    var selected_point = null;
+    var zoom_factor = 1;
+    var big_r = 3;
+    var small_r = 1;
 
 
     function filter_searchbox(d, text = search_box_text) {
@@ -197,56 +190,32 @@
 
         function zoomed(event) {
           const {transform} = event;
+          console.log("ZOOM EVENT")
+          console.log(event)
           g.attr("transform", transform);
+          g.selectAll('circle').attr('r', function (d, i)
+            {zoom_factor = event.transform.k
+             if (d3.select(this).attr('fill-opacity') == 1)
+                return big_r / Math.sqrt(zoom_factor);
+             return small_r / Math.sqrt(zoom_factor);})
 
         }
 
-        // See https://developer.mozilla.org/en-US/docs/Web/SVG for more on SVGs.
-
-        // const svg = d3.create('svg')
-        //   .attr('width', width)
-        //   .attr('height', height);
-        //
-        // // 4. Setting up scales.
-        // const xScale = d3.scaleLinear()
-        //   .domain([0, d3.max(gapminder, d => d.fertility)])
-        //   .range([margin.left, width - margin.right])
-        //   .nice();
-        //
-        // const yScale = d3.scaleLinear()
-        //   .domain([0, d3.max(gapminder, d => d.life_expect)])
-        //   .range([height - margin.bottom, margin.top])
-        //   .nice();
-        //
         const colorScaleTier = d3.scaleOrdinal()
           .domain(college_mobility.map(d => d.tier_name))
           .range(d3.schemeTableau10); // try other schemes, too!
 
         const colorScaleMobilityGradient = d3.scaleLinear()
             .domain([d3.min(college_mobility, d => d.kq5_cond_parq1),
-                     d3.mean(college_mobility, d => d.kq5_cond_parq1),
+                     d3.median(college_mobility, d => d.kq5_cond_parq1),
                      d3.max(college_mobility, d => d.kq5_cond_parq1)])
             .range(['red', '#ddd', 'blue']);
-        //
-        //
-        // // 5. Drawing our points
-        // const symbol = d3.symbol();
-        // const g = svg.append('g')
-        //   .classed('marks', true)
-        //
-        //   // helper that tackles selection and cluster color in the absence of a selection
-        //   function getClusterColor(datum) {
-        //     if (datum.hasOwnProperty("selected") && !datum.selected) {
-        //       return "lightgray";
-        //     }
-        //     return colorScale(datum.cluster);
-        //   };
 
         //*********************************************************************
         // Draw our histogram
-        const width_histo = 600,
+        const width_histo = 300,
               height_histo = 150,
-              margin_histo = {top: 10, right: 0, bottom: 20, left: 250};
+              margin_histo = {top: 10, right: 0, bottom: 20, left: 80};
 
         const svg_histo_tier = d3.create('svg')
           .attr('width', width_histo)
@@ -261,6 +230,8 @@
         ).map(d => ({key: d[0], value: d[1]}));
 
         const rawAggregateTier = aggregate_histo_tier(college_mobility);
+
+        // console.log(rawAggregateTier)
 
         const xScale_histo_tier = d3.scaleLinear()
           .domain([0, d3.max(rawAggregateTier, d => d.value)])
@@ -300,7 +271,7 @@
                   .attr('height', yScale_histo_tier.bandwidth())
                 .call(enter => enter.transition().duration(1000)
                   .attr('width', d => {
-                    console.log(d.value);
+                    // console.log(d.value);
                     return xScale_histo_tier(d.value) - margin_histo.left})),
               update => update
                   .attr("fill", d => colorScaleTier(d.key))
@@ -319,76 +290,362 @@
         //-------------------------------------------------------------------------
 
 
-      //   const width_histo = 600,
-      //         height_histo = 150,
-      //         margin_histo = {top: 10, right: 0, bottom: 20, left: 250};
-      //
-      //   const svg_histo_mobility = d3.create('svg')
-      //     .attr('width', width_histo)
-      //     .attr('height', height_histo);
-      //
-      //   // Helper function to nicely aggregate the data to plot on the histogram
-      //   // output: [{key: 0, value: 495927174}, {key: 1, value: 355392405}, ...{key: 5, value: 854125031}]
-      //   const aggregate_histo_mobility = (data) => {
-      //
-      //     {"Tier Avg": }
-      //     d3.rollups(
-      //     vals => vals,
-      //     d => d.name
-      //   ).map(d => ({key: d[0], value: d[1]}))
-      // };
-      //
-      //   // const rawAggregateTier = aggregate_histo_tier(college_mobility);
-      //
-      //   const yScale_histo_mobility = d3.scaleLinear()
-      //     .domain([0, 100])
-      //     .range([margin_histo.left, width_histo - margin_histo.right])
-      //     .nice();
-      //
-      //   const xScale_histo_mobility = d3.scaleBand()
-      //     .domain(["Tier Avg", "State Avg", "US Avg"])
-      //     .range([height_histo - margin_histo.bottom, margin_histo.top])
-      //     .padding(0.1);
-      //
-      //   svg_histo_mobility.append('g')
-      //     .classed('x-axis', true)
-      //     .attr('transform', `translate(0, ${height_histo - margin_histo.bottom})`)
-      //     .call(d3.axisBottom(xScale_histo_mobility).ticks(3));
-      //
-      //   svg_histo_mobility.append('g')
-      //     .classed('y-axis', true)
-      //     .attr('transform', `translate(${margin_histo.left}, 0)`)
-      //     .call(d3.axisLeft(yScale_histo_mobility).tickFormat((d,i) => d));
-      //
-      //   const g_hist = svg_histo_mobility.append('g')
-      //     .classed('marks', true);
-      //
-      //   //histogram datajoin
-      //   function dataJoinHistoMobility(rawData = college_mobility) {
-      //
-      //     g_hist.selectAll('rect')
-      //       .data(data)
-      //       .join(
-      //         enter => enter.append("rect")
-      //             .attr("fill", "black")
-      //             .attr('x', d => xScale_histo_mobility(d.value) - margin_histo.left})
-      //             .attr('y', margin_histo.bottom)
-      //             .attr('height', d => yScale_histo_mobility(d.))
-      //           .call(enter => enter.transition().duration(1000)
-      //             .attr('width', d => xScale_histo_mobility.bandwidth()),
-      //         update => update
-      //             .attr("fill", d => colorScaleTier(d.key))
-      //             .attr('y', d => yScale_histo_tier(d.key))
-      //             // .attr('width', d => xScale_histo_tier(d.value) - margin_histo.left),
-      //           .call(update => update.transition().duration(200)
-      //             .attr('width', d => yScale_histo_mobility(d.value) - margin_histo.left)),
-      //         exit => exit
-      //           .call(exit => exit.transition().duration(1000)
-      //             .attr('width', d => yScale_histo_mobility(0) - margin_histo.left)
-      //             .remove())
-      //       );
-      //
-      //   }
+        const svg_histo_mobility = d3.create('svg')
+          .attr('width', width_histo)
+          .attr('height', height_histo);
+
+        // Helper function to nicely aggregate the data to plot on the histogram
+        // output: [{key: 0, value: 495927174}, {key: 1, value: 355392405}, ...{key: 5, value: 854125031}]
+        const aggregate_histo_mobility = (data) => {
+
+
+
+          return [
+            ["Tier Avg",
+             selected_point ?
+              d3.mean(college_mobility.filter(d => d.tier_name == selected_point.tier_name),
+                      d => d.kq5_cond_parq1) :
+              0],
+            ["State Avg",
+             selected_point ?
+              d3.mean(college_mobility.filter(d => d.state_name == selected_point.state_name),
+                      d => d.kq5_cond_parq1) :
+              selected_state ?
+                d3.mean(college_mobility.filter(d => d.state_name == selected_state),
+                        d => d.kq5_cond_parq1) :
+                0],
+            ["US Avg", d3.mean(college_mobility, d => d.kq5_cond_parq1)]
+
+          ].map(d => ({key: d[0], value: d[1]}))
+      };
+
+        const rawAggregateMobility = aggregate_histo_mobility(college_mobility);
+
+        // console.log(rawAggregateMobility)
+
+        const yScale_histo_mobility = d3.scaleLinear()
+          .domain([0, 100])
+          .range([height_histo - margin_histo.bottom, margin_histo.top])
+          .nice();
+
+        // console.log(yScale_histo_mobility(10))
+        // console.log(yScale_histo_mobility(20))
+
+        const xScale_histo_mobility = d3.scaleBand()
+          .domain(rawAggregateMobility.map(d => d.key))
+          .range([margin_histo.left, width_histo - margin_histo.right])
+          .padding(0.1);
+
+        svg_histo_mobility.append('g')
+          .classed('x-axis', true)
+          .attr('transform', `translate(0, ${height_histo - margin_histo.bottom})`)
+          .call(d3.axisBottom(xScale_histo_mobility).tickFormat((d,i) => d));
+
+        svg_histo_mobility.append('g')
+          .classed('y-axis', true)
+          .attr('transform', `translate(${margin_histo.left}, 0)`)
+          .call(d3.axisLeft(yScale_histo_mobility).ticks(4))
+          .append('text')
+            .attr('transform', `translate(-30, ${margin_histo.top}) rotate(-90)`)
+            .attr('text-anchor', 'end')
+            .attr('fill', 'black')
+            .attr('font-size', '12px')
+            .attr('font-weight', 'bold')
+            .text('Social Mobility');
+
+        const g_hist_mobility = svg_histo_mobility.append('g')
+          .classed('marks', true);
+
+        //histogram datajoin
+        function dataJoinHistoMobility(rawData = college_mobility) {
+          const data = aggregate_histo_mobility(rawData);
+
+          // console.log(data)
+
+          g_hist_mobility.selectAll("line").remove()
+
+
+          if (selected_point) {
+            console.log(selected_point.kq5_cond_parq1)
+            g_hist_mobility.append("svg:line")
+              .attr("class", 'd3-dp-line')
+              .attr("x1", margin_histo.left)
+              .attr("y1", yScale_histo_mobility(selected_point.kq5_cond_parq1))
+              .attr("x2", width_histo - margin_histo.right)
+              .attr("y2", yScale_histo_mobility(selected_point.kq5_cond_parq1))
+              .style("stroke-dasharray", ("3, 3"))
+              .style("stroke-opacity", 0.9)
+              .style("stroke", " blue");
+          }
+
+          g_hist_mobility.selectAll('rect')
+            .data(data)
+            .join(
+              enter => enter.append("rect")
+                  .attr("fill", "black")
+                  .attr('x', d => xScale_histo_mobility(d.key))
+                  .attr('y', d => yScale_histo_mobility(d.value))
+                  .attr('height', d => yScale_histo_mobility(0) - yScale_histo_mobility(d.value))
+                .call(enter => enter.transition().duration(1000))
+                  .attr('width', d => xScale_histo_mobility.bandwidth()),
+              update => update
+                .attr('x', d => xScale_histo_mobility(d.key))
+                .attr('y', d => yScale_histo_mobility(d.value))
+                .attr('height', d => yScale_histo_mobility(0) - yScale_histo_mobility(d.value))
+              .call(enter => enter.transition().duration(1000)),
+              exit => exit
+                .call(exit => exit.transition().duration(1000)
+                  .attr('width', d => yScale_histo_mobility(0) - margin_histo.left)
+                  .remove())
+            );
+
+        }
+
+
+
+
+
+
+
+
+        //*********************************************************************
+
+        //-------------------------------------------------------------------------
+
+
+        const svg_histo_stickerprice = d3.create('svg')
+          .attr('width', width_histo)
+          .attr('height', height_histo);
+
+        // Helper function to nicely aggregate the data to plot on the histogram
+        // output: [{key: 0, value: 495927174}, {key: 1, value: 355392405}, ...{key: 5, value: 854125031}]
+        const aggregate_histo_stickerprice = (data) => {
+
+          return [
+            ["Tier Avg",
+             selected_point ?
+              d3.mean(college_mobility.filter(d => d.tier_name == selected_point.tier_name),
+                      d => d.sticker_price_2013) :
+              0],
+            ["State Avg",
+             selected_point ?
+              d3.mean(college_mobility.filter(d => d.state_name == selected_point.state_name),
+                      d => d.sticker_price_2013) :
+              selected_state ?
+                d3.mean(college_mobility.filter(d => d.state_name == selected_state),
+                        d => d.sticker_price_2013) :
+                0],
+            ["US Avg", d3.mean(college_mobility, d => d.sticker_price_2013)]
+
+          ].map(d => ({key: d[0], value: d[1]}))
+      };
+
+        const rawAggregateStickerprice = aggregate_histo_stickerprice(college_mobility);
+
+        // console.log(rawAggregateStickerprice)
+
+        const yScale_histo_stickerprice = d3.scaleLinear()
+          .domain([0, 52000])
+          .range([height_histo - margin_histo.bottom, margin_histo.top])
+          .nice();
+
+        console.log(d3.max(college_mobility, d => d.sticker_price_2013))
+
+        // console.log(yScale_histo_stickerprice(10))
+        // console.log(yScale_histo_stickerprice(20))
+
+        const xScale_histo_stickerprice = d3.scaleBand()
+          .domain(rawAggregateStickerprice.map(d => d.key))
+          .range([margin_histo.left, width_histo - margin_histo.right])
+          .padding(0.1);
+
+        svg_histo_stickerprice.append('g')
+          .classed('x-axis', true)
+          .attr('transform', `translate(0, ${height_histo - margin_histo.bottom})`)
+          .call(d3.axisBottom(xScale_histo_stickerprice).tickFormat((d,i) => d));
+
+        svg_histo_stickerprice.append('g')
+          .classed('y-axis', true)
+          .attr('transform', `translate(${margin_histo.left}, 0)`)
+          .call(d3.axisLeft(yScale_histo_stickerprice).ticks(4))
+          .append('text')
+            .attr('transform', `translate(-50, ${margin_histo.top}) rotate(-90)`)
+            .attr('text-anchor', 'end')
+            .attr('fill', 'black')
+            .attr('font-size', '12px')
+            .attr('font-weight', 'bold')
+            .text('Sticker Price (2013)');
+
+        const g_hist_stickerprice = svg_histo_stickerprice.append('g')
+          .classed('marks', true);
+
+        //histogram datajoin
+        function dataJoinHistoStickerprice(rawData = college_mobility) {
+          const data = aggregate_histo_stickerprice(rawData);
+
+          // console.log(data)
+
+          g_hist_stickerprice.selectAll("line").remove()
+
+
+          if (selected_point) {
+            console.log(selected_point.sticker_price_2013)
+            g_hist_stickerprice.append("svg:line")
+              .attr("class", 'd3-dp-line')
+              .attr("x1", margin_histo.left)
+              .attr("y1", yScale_histo_stickerprice(selected_point.sticker_price_2013))
+              .attr("x2", width_histo - margin_histo.right)
+              .attr("y2", yScale_histo_stickerprice(selected_point.sticker_price_2013))
+              .style("stroke-dasharray", ("3, 3"))
+              .style("stroke-opacity", 0.9)
+              .style("stroke", " blue");
+          }
+
+          g_hist_stickerprice.selectAll('rect')
+            .data(data)
+            .join(
+              enter => enter.append("rect")
+                  .attr("fill", "black")
+                  .attr('x', d => xScale_histo_stickerprice(d.key))
+                  .attr('y', d => yScale_histo_stickerprice(d.value))
+                  .attr('height', d => yScale_histo_stickerprice(0) - yScale_histo_stickerprice(d.value))
+                .call(enter => enter.transition().duration(1000))
+                  .attr('width', d => xScale_histo_stickerprice.bandwidth()),
+              update => update
+                .attr('x', d => xScale_histo_stickerprice(d.key))
+                .attr('y', d => yScale_histo_stickerprice(d.value))
+                .attr('height', d => yScale_histo_stickerprice(0) - yScale_histo_stickerprice(d.value))
+              .call(enter => enter.transition().duration(1000)),
+              exit => exit
+                .call(exit => exit.transition().duration(1000)
+                  .attr('width', d => yScale_histo_stickerprice(0) - margin_histo.left)
+                  .remove())
+            );
+
+        }
+
+
+
+
+
+
+
+
+        //*********************************************************************
+
+        //-------------------------------------------------------------------------
+
+
+        const svg_histo_parentincome = d3.create('svg')
+          .attr('width', width_histo)
+          .attr('height', height_histo);
+
+        // Helper function to nicely aggregate the data to plot on the histogram
+        // output: [{key: 0, value: 495927174}, {key: 1, value: 355392405}, ...{key: 5, value: 854125031}]
+        const aggregate_histo_parentincome = (data) => {
+
+          return [
+            ["Tier Avg",
+             selected_point ?
+              d3.mean(college_mobility.filter(d => d.tier_name == selected_point.tier_name),
+                      d => d.par_median) :
+              0],
+            ["State Avg",
+             selected_point ?
+              d3.mean(college_mobility.filter(d => d.state_name == selected_point.state_name),
+                      d => d.par_median) :
+              selected_state ?
+                d3.mean(college_mobility.filter(d => d.state_name == selected_state),
+                        d => d.par_median) :
+                0],
+            ["US Avg", d3.mean(college_mobility, d => d.par_median)]
+
+          ].map(d => ({key: d[0], value: d[1]}))
+      };
+
+        const rawAggregateParentincome = aggregate_histo_parentincome(college_mobility);
+
+        // console.log(rawAggregateParentincome)
+
+        const yScale_histo_parentincome = d3.scaleLinear()
+          .domain([0, 230000])
+          .range([height_histo - margin_histo.bottom, margin_histo.top])
+          .nice();
+
+        console.log(d3.max(college_mobility, d => d.par_median))
+
+        // console.log(yScale_histo_parentincome(10))
+        // console.log(yScale_histo_parentincome(20))
+
+        const xScale_histo_parentincome = d3.scaleBand()
+          .domain(rawAggregateParentincome.map(d => d.key))
+          .range([margin_histo.left, width_histo - margin_histo.right])
+          .padding(0.1);
+
+        svg_histo_parentincome.append('g')
+          .classed('x-axis', true)
+          .attr('transform', `translate(0, ${height_histo - margin_histo.bottom})`)
+          .call(d3.axisBottom(xScale_histo_parentincome).tickFormat((d,i) => d));
+
+        svg_histo_parentincome.append('g')
+          .classed('y-axis', true)
+          .attr('transform', `translate(${margin_histo.left}, 0)`)
+          .call(d3.axisLeft(yScale_histo_parentincome).ticks(4))
+          .append('text')
+            .attr('transform', `translate(-50, ${margin_histo.top}) rotate(-90)`)
+            .attr('text-anchor', 'end')
+            .attr('fill', 'black')
+            .attr('font-size', '12px')
+            .attr('font-weight', 'bold')
+            .text('Median Parent Income');
+
+        const g_hist_parentincome = svg_histo_parentincome.append('g')
+          .classed('marks', true);
+
+        //histogram datajoin
+        function dataJoinHistoParentincome(rawData = college_mobility) {
+          const data = aggregate_histo_parentincome(rawData);
+
+          console.log(data)
+
+          g_hist_parentincome.selectAll("line").remove()
+
+
+          if (selected_point) {
+            console.log(selected_point.par_median)
+            g_hist_parentincome.append("svg:line")
+              .attr("class", 'd3-dp-line')
+              .attr("x1", margin_histo.left)
+              .attr("y1", yScale_histo_parentincome(selected_point.par_median))
+              .attr("x2", width_histo - margin_histo.right)
+              .attr("y2", yScale_histo_parentincome(selected_point.par_median))
+              .style("stroke-dasharray", ("3, 3"))
+              .style("stroke-opacity", 0.9)
+              .style("stroke", " blue");
+          }
+
+          g_hist_parentincome.selectAll('rect')
+            .data(data)
+            .join(
+              enter => enter.append("rect")
+                  .attr("fill", "black")
+                  .attr('x', d => xScale_histo_parentincome(d.key))
+                  .attr('y', d => yScale_histo_parentincome(d.value))
+                  .attr('height', d => yScale_histo_parentincome(0) - yScale_histo_parentincome(d.value))
+                .call(enter => enter.transition().duration(1000))
+                  .attr('width', d => xScale_histo_parentincome.bandwidth()),
+              update => update
+                .attr('x', d => xScale_histo_parentincome(d.key))
+                .attr('y', d => yScale_histo_parentincome(d.value))
+                .attr('height', d => yScale_histo_parentincome(0) - yScale_histo_parentincome(d.value))
+              .call(enter => enter.transition().duration(1000)),
+              exit => exit
+                .call(exit => exit.transition().duration(1000)
+                  .attr('width', d => yScale_histo_parentincome(0) - margin_histo.left)
+                  .remove())
+            );
+
+        }
 
 
 
@@ -417,166 +674,99 @@
         function dataJoinMap(rawData = college_mobility) {
             const data = rawData//.filter(d => d.year === year);
 
-            // g.selectAll('path')
-            //     .data(data)
-            //     .join('path')
-            //       // .classed('country', true) // can reference these marks like css, i.e. 'path.country'
-            //       .attr('transform', d => `translate(${xScale(d.fertility)}, ${yScale(d.life_expect)})`)
-            //       .attr('fill', d => getClusterColor(d))
-            //       .attr('fill-opacity', 0.7)
-            //       .attr('d', d => symbol())
+            function displayTooltip(e, d) {
+              tip_div.transition()
+                .duration(200)
+                .style("opacity", .8);
+              tip_div.text(d.name)
+                .style("left", (e.pageX) + "px")
+                .style("top", (e.pageY - 28) + "px");
 
+            }
+
+            function hideTooltip(e, d) {
+              tip_div.transition()
+                 .duration(500)
+                 .style("opacity", 0);
+            }
+
+            // TODO: Selected on mouseover
 
             g.selectAll("circle")
                 .data(data)
                 .join(
                   enter => enter.append("circle")
                     .attr("transform", d => `translate(${d.projection})`)
-                    .attr("r", 3)
+                    .attr("r", big_r / Math.sqrt(zoom_factor))
                     .attr("fill", d => colorScaleMobilityGradient(d.kq5_cond_parq1))
                     .attr("stroke", d => colorScaleMobilityGradient(d.kq5_cond_parq1))
                     .attr("fill-opacity", 1)
                     .attr("stroke-opacity", 0)
                     .raise()
                     .on("mouseover", function(e, d) {
-                      	tip_div.transition()
-                    	   .duration(200)
-                         .style("opacity", .8);
-                       tip_div.text(d.name)
-                         .style("left", (e.pageX) + "px")
-                         .style("top", (e.pageY - 28) + "px");
+                      	displayTooltip(e, d)
+                        selected_point = d
+                        dataJoinBarplots()
                   	})
                     .on("mouseout", function(e, d) {
-                        tip_div.transition()
-                           .duration(500)
-                           .style("opacity", 0);
-                    }),
+                        hideTooltip(e, d)
+                        selected_point = null
+                        dataJoinBarplots()
+                    }).raise(),
 
                   update => update
                     .attr("transform", d => `translate(${d.projection})`)
-                    .attr("r", 3)
+                    .attr("r", big_r / Math.sqrt(zoom_factor))
                     .attr("fill", d => colorScaleMobilityGradient(d.kq5_cond_parq1))
                     .attr("stroke", d => colorScaleMobilityGradient(d.kq5_cond_parq1))
                     .attr("stroke-opacity", 0)
                     .attr("fill-opacity", 1)
                     .on("mouseover", function(e, d) {
-                        tip_div.transition()
-                         .duration(200)
-                         .style("opacity", .8);
-                       tip_div.text(d.name)
-                         .style("left", (e.pageX) + "px")
-                         .style("top", (e.pageY - 28) + "px");
+                      displayTooltip(e, d)
+                      selected_point = d
+                      dataJoinBarplots()
+
                     })
                     .on("mouseout", function(e, d) {
-                        tip_div.transition()
-                           .duration(500)
-                           .style("opacity", 0);
+                        hideTooltip(e, d)
+                        selected_point = null
+                        dataJoinBarplots()
                     }),
 
-                  exit => exit
-                    .attr("fill", "gray")
-                    .attr("stroke", "gray")
+                  exit => {console.log("EXIT");console.log(exit.data()); return exit
+                    // .attr("fill", "gray")
+                    // .attr("stroke", "gray")
                     .attr("fill-opacity", 0)
                     .attr("stroke-opacity", .5)
-                    .attr("r", 1)
+                    .attr("r", small_r / Math.sqrt(zoom_factor))
                     .on("mouseover", null)
-                    .on("mouseout", null))
+                    .on("mouseout", null)})
 
-          }
+                  // Raise visible points
+                  g.selectAll("circle").filter(function() {return d3.select(this).attr("fill-opacity") == 1}).raise()
+
+
+
+        }
+
+
+        function dataJoinBarplots(rawData = college_mobility) {
+          dataJoinHistoTier(rawData);
+          dataJoinHistoMobility(rawData);
+          dataJoinHistoStickerprice(rawData);
+          dataJoinHistoParentincome(rawData);
+
+        }
 
 
         // Helper to draw both the scatter plot and the histogram
         function chartsDataJoin(rawData = college_mobility) {
           dataJoinMap(rawData);
-
-          // this is for the histogram
-          dataJoinHistoTier(rawData);
-
-          // states.raise();
-          // g.selectAll("path").raise();
+          dataJoinBarplots(rawData);
 
         };
 
         chartsDataJoin();
-
-        //6. Drawing our x-axis
-        // svg.append('g')
-        // .attr('transform', `translate(0, ${height - margin.bottom})`)
-        // .call(d3.axisBottom(xScale))
-        // // Add x-axis title 'text' element.
-        // .append('text')
-        //   .attr('text-anchor', 'end')
-        //   .attr('fill', 'black')
-        //   .attr('font-size', '12px')
-        //   .attr('font-weight', 'bold')
-        //   .attr('x', width - margin.right)
-        //   .attr('y', -10)
-        //   .text('Fertility');
-        //
-        // //7. Drawing our y-axis
-        // svg.append('g')
-        //   .attr('transform', `translate(${margin.left}, 0)`)
-        //   .call(d3.axisLeft(yScale))
-        //   // Add y-axis title 'text' element.
-        //   .append('text')
-        //     .attr('transform', `translate(20, ${margin.top}) rotate(-90)`)
-        //     .attr('text-anchor', 'end')
-        //     .attr('fill', 'black')
-        //     .attr('font-size', '12px')
-        //     .attr('font-weight', 'bold')
-        //     .text('Life Expectancy');
-
-        // //8.  Adding a background label for the year.
-        // const yearLabel = svg.append('text')
-        //   .attr('x', 40)
-        //   .attr('y', height - margin.bottom - 20)
-        //   .attr('fill', '#ccc')
-        //   .attr('font-family', 'Helvetica Neue, Arial')
-        //   .attr('font-weight', 500)
-        //   .attr('font-size', 80)
-        //   .text(year);
-
-        // // 9. Adding a brush to allow selecting a sub-region
-        // const brush = d3.brush()  // Add the brush feature using the d3.brush function
-        //   // initialise the brush area
-        //   .extent([[0, 0], [width, height]]) // wrong
-        //   .extent([[margin.left, 0], [width, height-margin.bottom]])
-        //   .on("start brush end", brushed)
-        //
-        // // 10. append element and call brush
-        // svg.select("g.marks")
-        //     .attr("class", "brush")
-        //     .call(brush)
-
-        // // 11. add brush callback to handle brush event
-        // function brushed(event) {
-        //   const coords = event.selection; // [[x0, y0], [x1, y1]] for 2D brushes; [x0, x1] or [y0, y1] for 1D brushes
-        //   if (coords) {
-        //     const [[x0, y0], [x1, y1]] = coords;
-        //
-        //     // augment the data with a field "selected" which is set to true only
-        //     // for points within the brush selection
-        //     const brushedData = gapminder.map(d => {
-        //       return {
-        //         ...d,
-        //         selected: x0 <= xScale(d.fertility) && xScale(d.fertility) < x1 && y0 <= yScale(d.life_expect) && yScale(d.life_expect) < y1
-        //       };
-        //     });
-        //
-        //     chartsDataJoin(brushedData);
-        //   }
-        // };
-
-        // // 12. adding a clear on double click
-        // svg.on('dblclick', (event, d) => {
-        //   // gapminder data is not augmented with the "selected" field above,
-        //   // so getClusterColor knows to not grey things out
-        //   chartsDataJoin(gapminder);
-        // });
-
-        // console.log(college_mobility)
-        // console.log(typecollege_mobility))
-
 
 
         $('#search_box').autocomplete({
@@ -591,7 +781,7 @@
         $('#search_box').keyup(function(){
           // $('#slider').slider({value: this.value});
 
-          console.log(this.value);
+          // console.log(this.value);
 
           search_box_text = this.value
 
@@ -622,10 +812,15 @@
 
 
 
-        document.getElementById("chart").appendChild(svg.node());
+        $('.Map').append(svg.node());
 
         //add the histogram below the graph
-        document.getElementById("chart").appendChild(svg_histo_tier.node());
+        $('.RaceDemographics').append(svg_histo_tier.node());
+        // $('.MajorDist').append(svg_histo_mobility.node());
+        $('.SocialMobility').append(svg_histo_mobility.node());
+        $('.StickerPrice').append(svg_histo_stickerprice.node());
+        $('.ParentsIncome').append(svg_histo_parentincome.node());
+
 
       });
 
