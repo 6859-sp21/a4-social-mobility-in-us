@@ -37,6 +37,7 @@
       <div class="SocialMobility"></div>
       <div class="StickerPrice"></div>
       <div class="ParentsIncome"></div>
+      <div class="RaceDistribution"></div>
     </div>
 
     <!-- <div class="Map" id="chart" style="width:975px;height:610px;border:1px solid black;"> -->
@@ -90,6 +91,8 @@
         }
 
         college_mobility = college_mobility.filter(d => d.projection !==  null)
+        console.log("college_mobility")
+        console.log(college_mobility)
 
         // console.log(us)
 
@@ -407,7 +410,222 @@
 
 
 
+        //*********************************************************************
 
+        //-------------------------------------------------------------------------
+
+        const svg_histo_race = d3.create('svg')
+          .attr('width', width_histo)
+          .attr('height', height_histo);
+        
+        // Helper function to nicely aggregate the data to plot on the histogram
+        // output: [{key: 0, value: 495927174}, {key: 1, value: 355392405}, ...{key: 5, value: 854125031}]
+        const aggregate_histo_race = (data) => {
+
+
+          console.log("selected Point")
+          if(selected_point){
+            console.log(college_mobility.filter(d => d.name == selected_point.name).asian_or_pacific_share_fall_2000)
+
+          }
+          
+          return [
+            ["Asian",
+             selected_point ?
+              
+              college_mobility.filter(d => d.name == selected_point.name).map(d => d.asian_or_pacific_share_fall_2000) :
+              0],
+            ["Black",
+             selected_point ?
+              college_mobility.filter(d => d.name == selected_point.name).map(d => d.black_share_fall_2000) :
+              0],
+  
+            ["Hispanic",
+             selected_point ?
+              college_mobility.filter(d => d.name == selected_point.name).map(d => d.hisp_share_fall_2000) :
+              0],
+            ["Alien",
+             selected_point ?
+              college_mobility.filter(d => d.name == selected_point.name).map(d => d.alien_share_fall_2000) :
+              0]
+
+          ].map(d => ({key: d[0], value: d[1]}))
+      };
+
+        const rawAggregateRace = aggregate_histo_race(college_mobility);
+
+        //console.log(rawAggregateRace)
+
+        const yScale_histo_race = d3.scaleLinear()
+          .domain([0, 1])
+          .range([height_histo - margin_histo.bottom, margin_histo.top])
+          .nice();
+
+        // // console.log(yScale_histo_mobility(10))
+        // // console.log(yScale_histo_mobility(20))
+
+        const xScale_histo_race = d3.scaleBand()
+          .domain(rawAggregateRace.map(d => d.key))
+          .range([margin_histo.left, width_histo - margin_histo.right])
+          .padding(0.1);
+
+        svg_histo_race.append('g')
+          .classed('x-axis', true)
+          .attr('transform', `translate(0, ${height_histo - margin_histo.bottom})`)
+          .call(d3.axisBottom(xScale_histo_race).tickFormat((d,i) => d));
+
+        svg_histo_race.append('g')
+          .classed('y-axis', true)
+          .attr('transform', `translate(${margin_histo.left}, 0)`)
+          .call(d3.axisLeft(yScale_histo_race).ticks(4))
+          .append('text')
+            .attr('transform', `translate(-30, ${margin_histo.top}) rotate(-90)`)
+            .attr('text-anchor', 'end')
+            .attr('fill', 'black')
+            .attr('font-size', '12px')
+            .attr('font-weight', 'bold')
+            .text('Race Demographics');
+
+        const g_hist_race = svg_histo_race.append('g')
+          .classed('marks', true);
+
+        // //histogram datajoin
+        function dataJoinHistoRace(rawData = college_mobility) {
+          const data = aggregate_histo_race(rawData);
+          console.log("hi")
+          console.log(data)
+
+          g_hist_race.selectAll("line").remove()
+          g_hist_race.selectAll('rect')
+            .data(data)
+            .join(
+              enter => enter.append("rect")
+                  .attr("fill", "black")
+                  .attr('x', d => xScale_histo_race(d.key))
+                  .attr('y', d => yScale_histo_race(d.value))
+                  .attr('height', d => yScale_histo_race(0) - yScale_histo_race(d.value))
+                .call(enter => enter.transition().duration(1000))
+                  .attr('width', d => xScale_histo_race.bandwidth()),
+              update => update
+                .attr('x', d => xScale_histo_race(d.key))
+                .attr('y', d => yScale_histo_race(d.value))
+                .attr('height', d => yScale_histo_race(0) - yScale_histo_race(d.value))
+              .call(enter => enter.transition().duration(1000)),
+              exit => exit
+                .call(exit => exit.transition().duration(1000)
+                  .attr('width', d => yScale_histo_race(0) - margin_histo.left)
+                  .remove())
+            );
+
+        }
+
+
+
+
+
+
+
+
+
+        //*********************************************************************
+
+        //-------------------------------------------------------------------------
+        const svg_histo_major = d3.create('svg')
+          .attr('width', width_histo)
+          .attr('height', height_histo);
+        
+        // Helper function to nicely aggregate the data to plot on the histogram
+        // output: [{key: 0, value: 495927174}, {key: 1, value: 355392405}, ...{key: 5, value: 854125031}]
+        const aggregate_histo_major = (data) => {
+          
+          return [
+            ["Art",
+             selected_point ?
+              
+              college_mobility.filter(d => d.name == selected_point.name).map(d => d.pct_arthuman_2000) :
+              0],
+            ["Business",
+             selected_point ?
+              college_mobility.filter(d => d.name == selected_point.name).map(d => d.pct_business_2000) :
+              0],
+  
+            ["Health",
+             selected_point ?
+              college_mobility.filter(d => d.name == selected_point.name).map(d => d.pct_health_2000) :
+              0],
+        
+            ["Stem",
+             selected_point ?
+              college_mobility.filter(d => d.name == selected_point.name).map(d => d.pct_stem_2000) :
+              0]
+
+
+          ].map(d => ({key: d[0], value: d[1]}))
+      };
+
+        const rawAggregateMajor = aggregate_histo_major(college_mobility);
+
+        //console.log(rawAggregateRace)
+
+        const yScale_histo_major = d3.scaleLinear()
+          .domain([0, 100])
+          .range([height_histo - margin_histo.bottom, margin_histo.top])
+          .nice();
+
+        // // console.log(yScale_histo_mobility(10))
+        // // console.log(yScale_histo_mobility(20))
+
+        const xScale_histo_major = d3.scaleBand()
+          .domain(rawAggregateMajor.map(d => d.key))
+          .range([margin_histo.left, width_histo - margin_histo.right])
+          .padding(0.1);
+
+        svg_histo_major.append('g')
+          .classed('x-axis', true)
+          .attr('transform', `translate(0, ${height_histo - margin_histo.bottom})`)
+          .call(d3.axisBottom(xScale_histo_major).tickFormat((d,i) => d));
+
+        svg_histo_major.append('g')
+          .classed('y-axis', true)
+          .attr('transform', `translate(${margin_histo.left}, 0)`)
+          .call(d3.axisLeft(yScale_histo_race).ticks(4))
+          .append('text')
+            .attr('transform', `translate(-30, ${margin_histo.top}) rotate(-90)`)
+            .attr('text-anchor', 'end')
+            .attr('fill', 'black')
+            .attr('font-size', '12px')
+            .attr('font-weight', 'bold')
+            .text('Major Demographics');
+
+        const g_hist_major = svg_histo_major.append('g')
+          .classed('marks', true);
+
+        // //histogram datajoin
+        function dataJoinHistoMajor(rawData = college_mobility) {
+          const data = aggregate_histo_major(rawData);
+          g_hist_major.selectAll("line").remove()
+          g_hist_major.selectAll('rect')
+            .data(data)
+            .join(
+              enter => enter.append("rect")
+                  .attr("fill", "black")
+                  .attr('x', d => xScale_histo_major(d.key))
+                  .attr('y', d => yScale_histo_major(d.value))
+                  .attr('height', d => yScale_histo_major(0) - yScale_histo_major(d.value))
+                .call(enter => enter.transition().duration(1000))
+                  .attr('width', d => xScale_histo_major.bandwidth()),
+              update => update
+                .attr('x', d => xScale_histo_major(d.key))
+                .attr('y', d => yScale_histo_major(d.value))
+                .attr('height', d => yScale_histo_major(0) - yScale_histo_major(d.value))
+              .call(enter => enter.transition().duration(1000)),
+              exit => exit
+                .call(exit => exit.transition().duration(1000)
+                  .attr('width', d => yScale_histo_major(0) - margin_histo.left)
+                  .remove())
+            );
+
+        }
         //*********************************************************************
 
         //-------------------------------------------------------------------------
@@ -755,6 +973,8 @@
           dataJoinHistoMobility(rawData);
           dataJoinHistoStickerprice(rawData);
           dataJoinHistoParentincome(rawData);
+          dataJoinHistoRace(rawData);
+          dataJoinHistoMajor(rawData);
 
         }
 
@@ -816,6 +1036,8 @@
 
         //add the histogram below the graph
         $('.RaceDemographics').append(svg_histo_tier.node());
+        $('.RaceDemographics').append(svg_histo_race.node());
+        $('.RaceDemographics').append(svg_histo_major.node());
         // $('.MajorDist').append(svg_histo_mobility.node());
         $('.SocialMobility').append(svg_histo_mobility.node());
         $('.StickerPrice').append(svg_histo_stickerprice.node());

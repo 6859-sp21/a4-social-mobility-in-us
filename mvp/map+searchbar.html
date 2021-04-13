@@ -135,7 +135,7 @@
           event.stopPropagation();
           states.transition().style("fill", null);
 
-
+          console.log(college_mobility.filter(d => this.__data__.properties.name == d.state_name)[0].name)
           chartsDataJoin(college_mobility.filter(d => this.__data__.properties.name == d.state_name))
 
           d3.select(this).transition().style("fill", "black");
