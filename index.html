@@ -23,7 +23,12 @@
       <div class="flourish-embed flourish-chart" data-src="visualisation/5836846" data-height="150%"><script src="https://public.flourish.studio/resources/embed.js"></script></div>
 
       <div class="IntroText">
-        <p> US states present different opportunities for social mobility (Figure 1). <br><br>This website intends to provide you with a tool to better understand the heterogeneity in the degree of social mobility that US colleges provide and related factors. <br><br>It is based on data by the Opportunity Insights project at Harvard University. <br><br>The interactive tool below will allow you to explore this issue at the college level.</p>
+        <p> US states present different opportunities for social mobility (Figure 1). <br><br>
+          This website intends to provide you with a tool to better understand the heterogeneity in the degree of social mobility that US colleges provide and related factors. <br><br>
+          The visualization is based on data by the Opportunity Insights project at Harvard University which defines social mobility as the percentage of students who rose to the top quintile of earners given their parents were in the bottom quitile. <br><br>
+          The interactive tool below will allow you to explore this issue at the college level. <br><br>
+          <b>Each point in the map represents a college, and is colored based on social mobility. The national median is yellow, red points are below the median and green points are above. More red is further below. More green is further above.</b>
+        </p>
       </div>
 
       <div class="SearchboxDesc">
@@ -166,6 +171,7 @@
           $('#search_box').val("")
           search_box_text = ""
           selected_state = ""
+          selected_point = ""
 
           chartsDataJoin(college_mobility);
 
@@ -196,8 +202,8 @@
 
         function zoomed(event) {
           const {transform} = event;
-          console.log("ZOOM EVENT")
-          console.log(event)
+          // console.log("ZOOM EVENT")
+          // console.log(event)
           g.attr("transform", transform);
           g.selectAll('circle').attr('r', function (d, i)
             {zoom_factor = event.transform.k
@@ -967,7 +973,7 @@
                         dataJoinBarplots()
                     }),
 
-                  exit => {console.log("EXIT");console.log(exit.data()); return exit
+                  exit => {return exit
                     // .attr("fill", "gray")
                     // .attr("stroke", "gray")
                     .attr("fill-opacity", 0)
@@ -1014,14 +1020,48 @@
                   }
         });
 
-        $('#search_box').keyup(function(){
+        $('#search_box').keyup(function(e){
           // $('#slider').slider({value: this.value});
 
           // console.log(this.value);
 
           search_box_text = this.value
 
-          dataJoinMap(college_mobility.filter(d => filter_searchbox(d) && filter_state(d)));
+          if (e.which == '13') {
+            // e.preventDefault();
+
+            let results = college_mobility.filter(d => filter_searchbox(d) && filter_state(d))
+
+            console.log("ENTERPRESSED")
+
+            if (results.length == 1) {
+              console.log("RESULT")
+              console.log(results)
+              selected_point = results[0]
+
+              chartsDataJoin(results)
+
+            }
+
+
+          } else {
+
+            dataJoinMap(college_mobility.filter(d => filter_searchbox(d) && filter_state(d)));
+
+            let results = college_mobility.filter(d => filter_searchbox(d) && filter_state(d))
+
+            console.log("ENTERPRESSED")
+
+            if (results.length == 1) {
+              console.log("RESULT")
+              console.log(results)
+              selected_point = results[0]
+
+              chartsDataJoin(results)
+
+            }
+          }
+
         });
 
         // $('#search_button').click(function(){
