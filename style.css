@@ -16,13 +16,14 @@ p {
 .grid-container {
   display: grid;
   grid-template-columns: 25% 25% 25% 25%;
-  grid-template-rows: 30% 10% 20% 20% 20%;
+  grid-template-rows: 30% 10% 15% 15% 10% 20%;
   gap: 0px 0px;
   grid-template-areas:
     "FlourishChart FlourishChart IntroText IntroText"
     "SearchboxDesc SearchboxDesc SearchboxDesc ."
     "Map Map Map RaceDemographics"
     "Map Map Map MajorDist"
+    "SchoolLabel TierLabel StateLabel ."
     "SocialMobility StickerPrice ParentsIncome Captions";
   margin-left: auto;
   margin-right: auto;
@@ -35,12 +36,18 @@ p {
 
 .IntroText {
   grid-area: IntroText;
-  font-size: 1.2vw;
+  font-size: 1.3vw;
   margin-top: auto;
   margin-bottom: auto;
 }
 
 .SearchboxDesc { grid-area: SearchboxDesc; }
+
+.SchoolLabel { grid-area: SchoolLabel; }
+
+.TierLabel { grid-area: TierLabel; }
+
+.StateLabel { grid-area: StateLabel; }
 
 .Map { grid-area: Map; }
 
@@ -54,7 +61,10 @@ p {
 
 .ParentsIncome { grid-area: ParentsIncome; }
 
-.Captions { grid-area: Captions; }
+.Captions {
+  grid-area: Captions;
+  font-size: 1vw;
+}
 
 
 .selected {

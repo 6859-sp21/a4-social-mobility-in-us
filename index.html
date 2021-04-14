@@ -20,7 +20,7 @@
     <h1 style="font-size: 3vw;">6.859: Social Mobility in the US College System</h1>
 
     <div class="grid-container">
-      <div class="flourish-embed flourish-chart" data-src="visualisation/5836846" data-height="150%"><script src="https://public.flourish.studio/resources/embed.js"></script></div>
+      <div class="flourish-embed flourish-chart" data-src="visualisation/5836846" data-height="100%"><script src="https://public.flourish.studio/resources/embed.js"></script></div>
 
       <div class="IntroText">
         <p> US states present different opportunities for social mobility (Figure 1). <br><br>
@@ -42,10 +42,27 @@
       <!-- <div class="Map" style="width:975px;height:610px;border:1px solid black;"></div> -->
       <div class="RaceDemographics"></div>
       <div class="MajorDist"></div>
+      <div class="SchoolLabel">
+        <p>School:</p>
+        <p id="school-label">None</>
+      </div>
+      <div class="TierLabel">
+        <p>Tier:</p>
+        <p id="tier-label">None</>
+      </div>
+      <div class="StateLabel">
+        <p>State:</p>
+        <p id="state-label">None</>
+      </div>
+
       <div class="SocialMobility"></div>
       <div class="StickerPrice"></div>
       <div class="ParentsIncome"></div>
-      <div class="Captions"></div>
+      <div class="Captions">
+        <p>The charts to the right of the map show the racial demographics and the distribution over categories of majors for the selected school.</p>
+        <p>The charts below show a comparison between a given school (the dashed line) and the average within the tier, state, and whole US.</p>
+
+      </div>
     </div>
 
     <!-- <div class="Map" id="chart" style="width:975px;height:610px;border:1px solid black;"> -->
@@ -184,6 +201,23 @@
 
 
           selected_state = this.__data__.properties.name
+
+          console.log("SELECTED_POINT")
+          console.log(selected_point)
+
+          if (selected_point) {
+            if (selected_point.state_name != selected_state) {
+              $("#school-label").text("None")
+              $("#tier-label").text("None")
+              $("#state-label").text(selected_state)
+              selected_point = null;
+            }
+
+          } else {
+            $("#school-label").text("None")
+            $("#tier-label").text("None")
+            $("#state-label").text(selected_state)
+          }
 
           chartsDataJoin(college_mobility.filter(d => filter_searchbox(d) && filter_state(d)))
 
@@ -914,6 +948,11 @@
                 .style("left", (e.pageX) + "px")
                 .style("top", (e.pageY - 28) + "px");
 
+              $("#school-label").text(d.name)
+              $("#tier-label").text(d.tier_name)
+              $("#state-label").text(d.state_name)
+
+
               // $('.RaceDemographics').show()
               // $('.MajorDist').show()
 
@@ -923,6 +962,10 @@
               tip_div.transition()
                  .duration(500)
                  .style("opacity", 0);
+
+             // $("#school-label").text("None")
+             // $("#tier-label").text("None")
+             // $("#state-label").text(selected_state ? selected_state : "")
 
               // $('.RaceDemographics').hide()
               // $('.MajorDist').hide()
@@ -944,14 +987,14 @@
                     .attr("stroke-opacity", 0)
                     .raise()
                     .on("mouseover", function(e, d) {
-                      	displayTooltipAndRightCharts(e, d)
                         selected_point = d
+                      	displayTooltipAndRightCharts(e, d)
                         dataJoinBarplots()
                   	})
                     .on("mouseout", function(e, d) {
+                        // selected_point = null
                         hideTooltipAndRightCharts(e, d)
-                        selected_point = null
-                        dataJoinBarplots()
+                        // dataJoinBarplots()
                     }).raise(),
 
                   update => update
@@ -1039,6 +1082,10 @@
               console.log(results)
               selected_point = results[0]
 
+              $("#school-label").text(selected_point.name)
+              $("#tier-label").text(selected_point.tier_name)
+              $("#state-label").text(selected_point.state_name)
+
               chartsDataJoin(results)
 
             }
@@ -1056,6 +1103,10 @@
               console.log("RESULT")
               console.log(results)
               selected_point = results[0]
+
+              $("#school-label").text(selected_point.name)
+              $("#tier-label").text(selected_point.tier_name)
+              $("#state-label").text(selected_point.state_name)
 
               chartsDataJoin(results)
 
