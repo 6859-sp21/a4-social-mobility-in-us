@@ -21,7 +21,7 @@ p {
   grid-template-areas:
     "Map Map Map RaceDemographics"
     "Map Map Map MajorDist"
-    "SocialMobility StickerPrice ParentsIncome .";
+    "SocialMobility StickerPrice ParentsIncome Captions";
   margin-left: auto;
   margin-right: auto;
 }
@@ -37,6 +37,9 @@ p {
 .StickerPrice { grid-area: StickerPrice; }
 
 .ParentsIncome { grid-area: ParentsIncome; }
+
+.Captions { grid-area: Captions; }
+
 
 .selected {
   opacity: 1 !important;
@@ -64,4 +67,16 @@ svg {
   margin-left: auto;
   margin-right: auto;
 
+}
+
+.RaceDemographics {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.MajorDist {
+  display: flex;
+  align-items: center;
+  height: 100%;
 }

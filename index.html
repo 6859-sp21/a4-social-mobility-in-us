@@ -22,7 +22,7 @@
     <div class="flourish-embed flourish-chart" data-src="visualisation/5836846" style = "width: 400px;"><script src="https://public.flourish.studio/resources/embed.js"></script></div>
     <p> US states present different opportunities for social mobility (Figure 1). This website intends to provide you with a tool to better understand the heterogeneity in the degree of social mobility that US colleges provide and related factors. It is based on data by the Opportunity Insights project at Harvard University. The interactive tool at the bottom will allow you to explore this issue at the college level.</p>
 
-    <p>Search for schools using the searchbox. Clicking on the white background of the map will reset your search.
+    <p>Search for schools using the searchbox. Clicking on the white background of the map or "Reset Zoom"  will reset your search. <br>
     <input type="text" value="" id="search_box" placeholder="Search for schools..."/>
     <button id = "search_button"type="button">Update Charts</button>
     <button id = "reset_button"type="button">Reset Zoom</button>
@@ -37,7 +37,7 @@
       <div class="SocialMobility"></div>
       <div class="StickerPrice"></div>
       <div class="ParentsIncome"></div>
-      <div class="RaceDistribution"></div>
+      <div class="Captions"></div>
     </div>
 
     <!-- <div class="Map" id="chart" style="width:975px;height:610px;border:1px solid black;"> -->
@@ -212,7 +212,9 @@
             .domain([d3.min(college_mobility, d => d.kq5_cond_parq1),
                      d3.median(college_mobility, d => d.kq5_cond_parq1),
                      d3.max(college_mobility, d => d.kq5_cond_parq1)])
-            .range(['red', '#ddd', 'blue']);
+            .range(['#d73027', '#ffffbf', '#1a9850']);
+            // .range(['red', '#ddd', 'blue']);
+
 
         //*********************************************************************
         // Draw our histogram
@@ -377,15 +379,16 @@
               .attr("x2", width_histo - margin_histo.right)
               .attr("y2", yScale_histo_mobility(selected_point.kq5_cond_parq1))
               .style("stroke-dasharray", ("3, 3"))
-              .style("stroke-opacity", 0.9)
-              .style("stroke", " blue");
+              .style("stroke-opacity", 1)
+              .style("stroke-width", 2)
+              .style("stroke", "#ff7c43");
           }
 
           g_hist_mobility.selectAll('rect')
             .data(data)
             .join(
               enter => enter.append("rect")
-                  .attr("fill", "black")
+                  .attr("fill", "#2f4b7c")
                   .attr('x', d => xScale_histo_mobility(d.key))
                   .attr('y', d => yScale_histo_mobility(d.value))
                   .attr('height', d => yScale_histo_mobility(0) - yScale_histo_mobility(d.value))
@@ -417,7 +420,7 @@
         const svg_histo_race = d3.create('svg')
           .attr('width', width_histo)
           .attr('height', height_histo);
-        
+
         // Helper function to nicely aggregate the data to plot on the histogram
         // output: [{key: 0, value: 495927174}, {key: 1, value: 355392405}, ...{key: 5, value: 854125031}]
         const aggregate_histo_race = (data) => {
@@ -428,18 +431,18 @@
             console.log(college_mobility.filter(d => d.name == selected_point.name).asian_or_pacific_share_fall_2000)
 
           }
-          
+
           return [
             ["Asian",
              selected_point ?
-              
+
               college_mobility.filter(d => d.name == selected_point.name).map(d => d.asian_or_pacific_share_fall_2000) :
               0],
             ["Black",
              selected_point ?
               college_mobility.filter(d => d.name == selected_point.name).map(d => d.black_share_fall_2000) :
               0],
-  
+
             ["Hispanic",
              selected_point ?
               college_mobility.filter(d => d.name == selected_point.name).map(d => d.hisp_share_fall_2000) :
@@ -500,7 +503,7 @@
             .data(data)
             .join(
               enter => enter.append("rect")
-                  .attr("fill", "black")
+                  .attr("fill", "#2f4b7c")
                   .attr('x', d => xScale_histo_race(d.key))
                   .attr('y', d => yScale_histo_race(d.value))
                   .attr('height', d => yScale_histo_race(0) - yScale_histo_race(d.value))
@@ -533,27 +536,27 @@
         const svg_histo_major = d3.create('svg')
           .attr('width', width_histo)
           .attr('height', height_histo);
-        
+
         // Helper function to nicely aggregate the data to plot on the histogram
         // output: [{key: 0, value: 495927174}, {key: 1, value: 355392405}, ...{key: 5, value: 854125031}]
         const aggregate_histo_major = (data) => {
-          
+
           return [
             ["Art",
              selected_point ?
-              
+
               college_mobility.filter(d => d.name == selected_point.name).map(d => d.pct_arthuman_2000) :
               0],
             ["Business",
              selected_point ?
               college_mobility.filter(d => d.name == selected_point.name).map(d => d.pct_business_2000) :
               0],
-  
+
             ["Health",
              selected_point ?
               college_mobility.filter(d => d.name == selected_point.name).map(d => d.pct_health_2000) :
               0],
-        
+
             ["Stem",
              selected_point ?
               college_mobility.filter(d => d.name == selected_point.name).map(d => d.pct_stem_2000) :
@@ -608,7 +611,7 @@
             .data(data)
             .join(
               enter => enter.append("rect")
-                  .attr("fill", "black")
+                  .attr("fill", "#2f4b7c")
                   .attr('x', d => xScale_histo_major(d.key))
                   .attr('y', d => yScale_histo_major(d.value))
                   .attr('height', d => yScale_histo_major(0) - yScale_histo_major(d.value))
@@ -715,15 +718,16 @@
               .attr("x2", width_histo - margin_histo.right)
               .attr("y2", yScale_histo_stickerprice(selected_point.sticker_price_2013))
               .style("stroke-dasharray", ("3, 3"))
-              .style("stroke-opacity", 0.9)
-              .style("stroke", " blue");
+              .style("stroke-opacity", 1)
+              .style("stroke-width", 2)
+              .style("stroke", "#ff7c43");
           }
 
           g_hist_stickerprice.selectAll('rect')
             .data(data)
             .join(
               enter => enter.append("rect")
-                  .attr("fill", "black")
+                  .attr("fill", "#2f4b7c")
                   .attr('x', d => xScale_histo_stickerprice(d.key))
                   .attr('y', d => yScale_histo_stickerprice(d.value))
                   .attr('height', d => yScale_histo_stickerprice(0) - yScale_histo_stickerprice(d.value))
@@ -838,15 +842,16 @@
               .attr("x2", width_histo - margin_histo.right)
               .attr("y2", yScale_histo_parentincome(selected_point.par_median))
               .style("stroke-dasharray", ("3, 3"))
-              .style("stroke-opacity", 0.9)
-              .style("stroke", " blue");
+              .style("stroke-opacity", 1)
+              .style("stroke-width", 2)
+              .style("stroke", "#ff7c43");
           }
 
           g_hist_parentincome.selectAll('rect')
             .data(data)
             .join(
               enter => enter.append("rect")
-                  .attr("fill", "black")
+                  .attr("fill", "#2f4b7c")
                   .attr('x', d => xScale_histo_parentincome(d.key))
                   .attr('y', d => yScale_histo_parentincome(d.value))
                   .attr('height', d => yScale_histo_parentincome(0) - yScale_histo_parentincome(d.value))
@@ -892,7 +897,7 @@
         function dataJoinMap(rawData = college_mobility) {
             const data = rawData//.filter(d => d.year === year);
 
-            function displayTooltip(e, d) {
+            function displayTooltipAndRightCharts(e, d) {
               tip_div.transition()
                 .duration(200)
                 .style("opacity", .8);
@@ -900,12 +905,20 @@
                 .style("left", (e.pageX) + "px")
                 .style("top", (e.pageY - 28) + "px");
 
+              // $('.RaceDemographics').show()
+              // $('.MajorDist').show()
+
             }
 
-            function hideTooltip(e, d) {
+            function hideTooltipAndRightCharts(e, d) {
               tip_div.transition()
                  .duration(500)
                  .style("opacity", 0);
+
+              // $('.RaceDemographics').hide()
+              // $('.MajorDist').hide()
+
+
             }
 
             // TODO: Selected on mouseover
@@ -922,12 +935,12 @@
                     .attr("stroke-opacity", 0)
                     .raise()
                     .on("mouseover", function(e, d) {
-                      	displayTooltip(e, d)
+                      	displayTooltipAndRightCharts(e, d)
                         selected_point = d
                         dataJoinBarplots()
                   	})
                     .on("mouseout", function(e, d) {
-                        hideTooltip(e, d)
+                        hideTooltipAndRightCharts(e, d)
                         selected_point = null
                         dataJoinBarplots()
                     }).raise(),
@@ -940,13 +953,13 @@
                     .attr("stroke-opacity", 0)
                     .attr("fill-opacity", 1)
                     .on("mouseover", function(e, d) {
-                      displayTooltip(e, d)
+                      displayTooltipAndRightCharts(e, d)
                       selected_point = d
                       dataJoinBarplots()
 
                     })
                     .on("mouseout", function(e, d) {
-                        hideTooltip(e, d)
+                        hideTooltipAndRightCharts(e, d)
                         selected_point = null
                         dataJoinBarplots()
                     }),
@@ -1035,9 +1048,9 @@
         $('.Map').append(svg.node());
 
         //add the histogram below the graph
-        $('.RaceDemographics').append(svg_histo_tier.node());
+        // $('.RaceDemographics').append(svg_histo_tier.node());
         $('.RaceDemographics').append(svg_histo_race.node());
-        $('.RaceDemographics').append(svg_histo_major.node());
+        $('.MajorDist').append(svg_histo_major.node());
         // $('.MajorDist').append(svg_histo_mobility.node());
         $('.SocialMobility').append(svg_histo_mobility.node());
         $('.StickerPrice').append(svg_histo_stickerprice.node());
