@@ -17,19 +17,22 @@
   </head>
   <body>
 
-    <h1>6.859: Social Mobility in the US College System</h1>
-
-    <div class="flourish-embed flourish-chart" data-src="visualisation/5836846" style = "width: 400px;"><script src="https://public.flourish.studio/resources/embed.js"></script></div>
-    <p> US states present different opportunities for social mobility (Figure 1). This website intends to provide you with a tool to better understand the heterogeneity in the degree of social mobility that US colleges provide and related factors. It is based on data by the Opportunity Insights project at Harvard University. The interactive tool at the bottom will allow you to explore this issue at the college level.</p>
-
-    <p>Search for schools using the searchbox. Clicking on the white background of the map or "Reset Zoom"  will reset your search. <br>
-    <input type="text" value="" id="search_box" placeholder="Search for schools..."/>
-    <button id = "search_button"type="button">Update Charts</button>
-    <button id = "reset_button"type="button">Reset Zoom</button>
-
-    </p>
+    <h1 style="font-size: 3vw;">6.859: Social Mobility in the US College System</h1>
 
     <div class="grid-container">
+      <div class="flourish-embed flourish-chart" data-src="visualisation/5836846" data-height="150%"><script src="https://public.flourish.studio/resources/embed.js"></script></div>
+
+      <div class="IntroText">
+        <p> US states present different opportunities for social mobility (Figure 1). <br><br>This website intends to provide you with a tool to better understand the heterogeneity in the degree of social mobility that US colleges provide and related factors. <br><br>It is based on data by the Opportunity Insights project at Harvard University. <br><br>The interactive tool below will allow you to explore this issue at the college level.</p>
+      </div>
+
+      <div class="SearchboxDesc">
+        <p>Select a school by typing in the searchbox and pressing enter or by hovering your mousing over a point. Clicking on the white background of the map or the "Reset Zoom" button will reset your search. </p>
+        <input type="text" value="" id="search_box" style="width:50%;" placeholder="Search for schools..."/>
+        <!-- <button id = "search_button"type="button">Update Charts</button> -->
+        <button id = "reset_button"type="button" style="float: right;">Reset Zoom</button>
+      </div>
+
       <div class="Map" style="border:1px solid black;"></div>
       <!-- <div class="Map" style="width:975px;height:610px;border:1px solid black;"></div> -->
       <div class="RaceDemographics"></div>
@@ -1021,15 +1024,15 @@
           dataJoinMap(college_mobility.filter(d => filter_searchbox(d) && filter_state(d)));
         });
 
-        $('#search_button').click(function(){
-          // $('#slider').slider({value: this.value});
-
-          // console.log(this.value);
-
-          console.log("SEARCH CLICKED");
-
-          chartsDataJoin(college_mobility.filter(d => filter_searchbox(d) && filter_state(d)));
-        });
+        // $('#search_button').click(function(){
+        //   // $('#slider').slider({value: this.value});
+        //
+        //   // console.log(this.value);
+        //
+        //   console.log("SEARCH CLICKED");
+        //
+        //   chartsDataJoin(college_mobility.filter(d => filter_searchbox(d) && filter_state(d)));
+        // });
 
         $('#reset_button').click(function(){
           // $('#slider').slider({value: this.value});
